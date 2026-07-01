@@ -62,3 +62,6 @@ temp/
 *.mat
 
 # === Oversized files (>50MB; GitHub limit is 100MB) ===
+
+# but DO track the example env
+!.env.example
