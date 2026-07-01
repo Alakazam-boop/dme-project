@@ -1,0 +1,64 @@
+# === Secrets / credentials (NEVER commit) ===
+.env
+.env.*
+*.pem
+*.key
+*.keystore
+*credentials*
+*secret*
+auth_config.php
+config.local.*
+
+# === Dependencies / build artifacts ===
+node_modules/
+vendor/
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+.pytest_cache/
+dist/
+build/
+*.egg-info/
+.gradle/
+target/
+
+# === IDE / editor ===
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# === Logs / temp ===
+*.log
+logs/
+tmp/
+temp/
+*.tmp
+
+# === Large / binary blobs ===
+*.exe
+*.msi
+*.iso
+*.zip
+*.7z
+*.mp4
+*.mov
+*.iso
+
+# === Data dumps (review before un-ignoring) ===
+*.sqlite
+*.db
+
+# === Project-specific dependency dirs ===
+.idea/
+*.zip
+*.7z
+*.rar
+*.mp4
+*.mov
+*.mat
+
+# === Oversized files (>50MB; GitHub limit is 100MB) ===
