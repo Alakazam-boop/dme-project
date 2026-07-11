@@ -1,117 +1,133 @@
-# Decision Memory Engine (DME) — Clinical Advisory System
+# Decision Memory Engine
 
-> An AI-powered clinical decision-support prototype that combines a trained ML risk model with
-> case-based reasoning and an LLM advisory layer — presented as an interactive Streamlit dashboard.
+A clinical decision-support prototype that combines a trained machine learning risk model, case-based reasoning over a growing decision memory, and an optional large language model advisory layer, all presented as an interactive Streamlit dashboard. It is built on the openly licensed MIMIC-IV demo cohort.
 
-![Type](https://img.shields.io/badge/type-research%20prototype-blueviolet)
-![Language](https://img.shields.io/badge/python-3.10%2B-3776ab)
-![UI](https://img.shields.io/badge/ui-Streamlit-ff4b4b)
-![ML](https://img.shields.io/badge/ML-scikit--learn%20RandomForest-f7931e)
-![LLM](https://img.shields.io/badge/LLM-Groq%20Llama%203.3%2070B-000000)
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab)
+![UI](https://img.shields.io/badge/UI-Streamlit-ff4b4b)
+![ML](https://img.shields.io/badge/ML-scikit--learn-f7931e)
+![LLM](https://img.shields.io/badge/LLM-Llama%203.3%2070B-000000)
+![Status](https://img.shields.io/badge/status-research%20prototype-blueviolet)
 
 ---
 
 ## Overview
 
-The **Decision Memory Engine** is a clinical advisory system that helps reason about patient
-risk and outcomes. It is built around the idea of a *decision memory* — every decision the
-system makes is logged, later linked to an outcome, and fed back to improve future predictions
-(a lightweight case-based-reasoning + continual-learning loop).
+The Decision Memory Engine helps reason about patient risk and outcomes. It is built around the idea of a decision memory: every decision the system makes is logged, later linked to an outcome, and fed back to improve future predictions. This is a lightweight case-based-reasoning and continual-learning loop.
 
 The system fuses three complementary techniques:
-1. **Statistical ML** — a RandomForest classifier trained on 100 MIMIC-IV demo patients for
-   outcome prediction and risk scoring.
-2. **Case-Based Reasoning (CBR)** — retrieval of historically similar cases from the decision
-   memory to contextualize new ones.
-3. **LLM advisory** — Groq-hosted Llama 3.3 70B for natural-language summaries, differential
-   suggestions, missing-data detection, safety/bias analysis, and an interactive assistant.
 
-> This project is the engineering artefact behind the CST3391 final-year project
-> ([`cst3391-individual-project`](https://github.com/Alakazam-boop/cst3391-individual-project))
-> and the CST3350 poster.
+1. **Statistical machine learning.** A gradient boosting classifier trained on the MIMIC-IV demo cohort for outcome prediction and risk scoring.
+2. **Case-based reasoning.** Retrieval of historically similar cases from the decision memory to give context to a new case.
+3. **Language model advisory.** An optional Llama 3.3 70B layer (served through Groq) for natural-language summaries, differential suggestions, missing-data detection, and a safety and bias review. The system runs fully without it; only the language tabs switch off when no API key is present.
 
-## Features — the five-tab dashboard
+---
+
+## Skills demonstrated
+
+- **Machine learning**: gradient boosting, logistic regression, class-imbalance handling with sample weights, stratified train and test splitting, 5-fold cross validation
+- **Model evaluation**: accuracy, ROC-AUC, confusion matrices, cross-validated scores with error bars, comparison against a majority-class baseline
+- **Data engineering**: a reproducible pipeline from raw MIMIC-IV tables to processed decision traces, feature engineering, a SQLite decision log
+- **Case-based reasoning**: building and querying a similarity index over past decisions
+- **Application development**: a five-tab Streamlit dashboard
+- **LLM integration**: prompt design and a graceful-degradation pattern so the app works with or without the model
+- **Software practices**: modular package layout, environment-based secrets, offline evaluation separated from the live app
+
+---
+
+## The dashboard
+
 | Tab | Capability |
 |-----|-----------|
-| 1. **Clinical Analysis** | Enter vitals → risk score + ML outcome prediction |
-| 2. **Deep Analysis** | LLM-generated summary, differentials, and missing-data flags |
-| 3. **Decision Memory** | Charts of historical cases + model version history |
-| 4. **Safety & Bias** | Automated data-quality checks + AI safety/bias analysis |
-| 5. **AI Assistant** | Free-form chat with full patient context |
+| 1. Clinical Analysis | Enter vitals to get a risk score and an outcome prediction. |
+| 2. Deep Analysis | Language-model summary, differentials, and missing-data flags. |
+| 3. Decision Memory | Charts of historical cases and model version history. |
+| 4. Safety and Bias | Automated data-quality checks and a safety and bias review. |
+| 5. AI Assistant | Free-form chat with full patient context. |
+
+---
 
 ## Architecture
 
 ```
-        ┌───────────────────────── Streamlit UI (app.py) ─────────────────────────┐
-        │  Tab1 Clinical · Tab2 Deep · Tab3 Memory · Tab4 Safety · Tab5 Assistant  │
-        └───────┬───────────────────────┬───────────────────────────┬─────────────┘
-                │                        │                           │
-      ┌─────────▼─────────┐   ┌──────────▼──────────┐     ┌──────────▼──────────┐
-      │ learning_engine   │   │ outcome_linker      │     │  Groq LLM API       │
-      │ RandomForest +    │   │ links decisions →   │     │  Llama 3.3 70B      │
-      │ CBR index         │   │ outcomes            │     │  (via env API key)  │
-      └─────────┬─────────┘   └──────────┬──────────┘     └─────────────────────┘
-                │                         │
-      ┌─────────▼─────────────────────────▼─────────┐
-      │  decision_logger  →  SQLite (database/dme.db) │
-      └───────────────────────────────────────────────┘
+        Streamlit UI (app.py)
+        Tab1 Clinical | Tab2 Deep | Tab3 Memory | Tab4 Safety | Tab5 Assistant
+                |                 |                        |
+        learning_engine     outcome_linker           Language model API
+        gradient boosting   links decisions          Llama 3.3 70B
+        + CBR index         to outcomes              (optional, via env key)
+                |                 |
+        decision_logger  ->  SQLite decision store
 ```
 
-## Technology Stack
-| Component | Technology |
-|-----------|-----------|
-| UI | Streamlit |
-| ML | scikit-learn (RandomForest), NumPy, pandas |
-| Reasoning | Custom case-based-reasoning index over the decision log |
-| LLM | Groq API (Llama 3.3 70B) — **key supplied via environment variable, never committed** |
-| Storage | SQLite (`database/dme.db`) |
-| Plotting | Matplotlib |
-| Data | MIMIC-IV demo cohort (100 patients) |
+---
 
-## Repository Structure
+## Model evaluation
+
+`evaluation/evaluate.py` compares three approaches on the same data, with a stratified split that preserves the class balance and 5-fold cross validation for a stable estimate:
+
+1. A majority-class baseline, which sets the floor any real model must beat.
+2. Logistic regression with balanced class weights, a simple linear model with no memory.
+3. The Decision Memory Engine, a gradient boosting model used alongside case-based reasoning.
+
+| | |
+|---|---|
+| ![Model comparison](evaluation/results/model_comparison.png) | ![Cross-validation](evaluation/results/crossval_comparison.png) |
+
+![Confusion matrix](evaluation/results/confusion_matrix.png)
+
+---
+
+## Repository structure
+
 ```
-.
-├── app.py                    # Streamlit dashboard (single-file, 5 tabs)
-├── reset.py                  # Reset the decision-memory database
+decision-memory-engine/
+├── app.py                    # Streamlit dashboard (five tabs)
+├── reset.py                  # reset the decision-memory database
 ├── modules/
-│   ├── learning_engine.py    # train_classifier · predict_outcome · build_cbr_index
+│   ├── learning_engine.py    # train classifier, predict outcome, build CBR index
 │   ├── outcome_linker.py     # link completed decision traces to outcomes
 │   ├── decision_logger.py    # persist every decision to SQLite
 │   ├── feature_pipeline.py   # feature engineering
 │   └── setup_db.py           # schema bootstrap
 ├── evaluation/
-│   ├── evaluate.py           # model evaluation
-│   └── results/              # confusion matrix, cross-val & model comparison plots
+│   ├── evaluate.py           # offline model comparison
+│   └── results/              # confusion matrix, cross-val and comparison charts
 ├── models/                   # serialized model artefacts (.pkl)
-└── data/                     # raw / processed / synthetic datasets
+└── data/                     # raw MIMIC-IV demo, processed traces, and a synthetic generator
 ```
 
-## Getting Started
+---
+
+## Getting started
+
 ```bash
 # 1. Clone
-git clone https://github.com/Alakazam-boop/dme-project.git
-cd dme-project
+git clone https://github.com/Simaak-Sayed/decision-memory-engine.git
+cd decision-memory-engine
 
 # 2. Install dependencies
 pip install streamlit scikit-learn pandas numpy matplotlib groq
 
-# 3. Provide the LLM API key via environment (NEVER hard-code it)
-export GROQ_API_KEY="your-groq-key"      # Windows: set GROQ_API_KEY=...
+# 3. Optional: provide a language-model API key via the environment (never hard-code it)
+export GROQ_API_KEY="your-key"        # Windows: set GROQ_API_KEY=...
 
 # 4. Run
 streamlit run app.py
 ```
-The AI features degrade gracefully if `GROQ_API_KEY` is unset — the ML prediction and
-decision-memory features still work; only the LLM tabs are disabled.
 
-## Model Evaluation
-`evaluation/evaluate.py` produces a confusion matrix, cross-validation comparison, and a
-model-comparison chart (see `evaluation/results/`).
-
-## Security & Data Notes
-- 🔑 The Groq API key is read from `GROQ_API_KEY` at runtime — no secrets are stored in the repo.
-- 🏥 Uses the **public MIMIC-IV demo** subset only; no real/identifiable patient data.
-- ⚠️ Research prototype — **not** a certified medical device and not for clinical use.
+If `GROQ_API_KEY` is not set, the machine learning prediction and decision-memory features still work and only the language-model tabs are disabled.
 
 ---
-_Final-year research project. © Simaak Sayed._
+
+## Data and ethics
+
+- This project uses the **MIMIC-IV Clinical Database Demo** (100 patients), which is openly available on PhysioNet under the Open Data Commons Open Database License. No credentialed or identifiable patient data is included.
+- Please cite the MIMIC-IV demo and PhysioNet if you build on this work.
+- The language-model API key is read from the environment at runtime, so no secrets are stored in the repository.
+- This is a research prototype. It is not a certified medical device and must not be used for real clinical decisions.
+
+---
+
+## License and author
+
+Released under the MIT License. Author: Simaak Haque Fahimuddin Sayed.
